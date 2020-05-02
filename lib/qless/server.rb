@@ -475,10 +475,23 @@ module Qless
       if data['type'].nil?
         halt 400, 'Neet type'
       else
-        return json(client.jobs.failed(data['type'])['jobs'].map do |job|
-          job.cancel
-          { id: job.jid }
-        end)
+        failed_items = client.jobs.failed(data['type'])['jobs']
+        # Need delete displayed items from page, so save first list. Just for rendering.
+        first = failed_items
+        while failed_items.count > 0 do
+          failed_items.map do |job|
+            job.cancel
+          end
+
+          # Get next items for detetion
+          failed_items = client.jobs.failed(data['type'])['jobs']
+        end
+
+        #just render.
+        return json(first.map do |job|
+            { id: job.jid }
+        end
+        )
       end
     end
 
